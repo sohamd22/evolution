@@ -15,6 +15,8 @@ If found without Water for an extended duration, it is removed from the ecosyste
 """
 
 class Grass:
+    ID = 2
+
     def __init__(self, pos_x, pos_y,
                  LIFESPAN = 6, MAX_HEIGHT = 1, age = 0, height = 0):
         # position
