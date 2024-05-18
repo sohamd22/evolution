@@ -3,10 +3,19 @@ Water is a static element of variable size and its only purpose is to be used by
 sustain themselves.
 """
 
-class Water:
-    ID = 1
+import pygame as pg
 
-    def __init__(self, pos_x, pos_y,
-                SIZE = 5):
-        self.pos_x = pos_x
-        self.pos_y = pos_y
+class Water(pg.sprite.Sprite):
+    ID = 1
+    COLOR = (33, 139, 219) # blue
+
+    instances = pg.sprite.Group()
+
+    def __init__(self, rect):
+        super().__init__()
+        self.rect = rect
+
+        Water.instances.add(self)
+    
+    def update(self, screen):
+        pg.draw.rect(screen, self.COLOR, self.rect)

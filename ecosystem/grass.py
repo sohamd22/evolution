@@ -14,14 +14,20 @@ They have variable traits:
 If found without Water for an extended duration, it is removed from the ecosystem.
 """
 
-class Grass:
-    ID = 2
+import pygame as pg
+import random as rd
+import math
 
-    def __init__(self, pos_x, pos_y,
+class Grass(pg.sprite.Sprite):
+    ID = 2
+    COLOR = (41, 128, 17) # dark green
+
+    instances = pg.sprite.Group()
+
+    def __init__(self, rect,
                  LIFESPAN = 6, MAX_HEIGHT = 1, age = 0, height = 0):
-        # position
-        self.pos_x = pos_x
-        self.pos_y = pos_y
+        super().__init__()
+        self.rect = rect
 
         # genetic traits
         self.MAX_HEIGHT = MAX_HEIGHT
@@ -30,4 +36,11 @@ class Grass:
         # variable traits
         self.age = age
         self.height = height
-        
+
+        Grass.instances.add(self)
+    
+    def can_reproduce(self, positive_dependents, negative_dependents):
+        pass
+
+    def update(self, screen):
+        pg.draw.rect(screen, self.COLOR, self.rect)

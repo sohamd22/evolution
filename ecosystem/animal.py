@@ -27,7 +27,9 @@ They have variable traits that may reach the corresponding maximums based on env
 If found very hungry or thirsty for an extended duration, it is removed from the ecosystem.
 """
 
-class Animal:
+import pygame as pg
+
+class Animal(pg.sprite.Sprite):
     def __init__(self, pos_x, pos_y,
                  LIFESPAN, MAX_SPEED, MAX_ENDURANCE, MAX_VISION, 
                  age, speed, endurance, vision):

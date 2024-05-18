@@ -1,7 +1,17 @@
 import pygame as pg
-import sys
+import random as rd
+import sys, os
 
 from map import Map
+
+from ecosystem.water import Water
+from ecosystem.grass import Grass
+
+types = [Water, Grass]
+id_to_type = {type.ID: type for type in types}
+id_to_type[0] = None
+
+tiles = pg.sprite.Group()
 
 def input(events):
     for event in events:
@@ -10,32 +20,42 @@ def input(events):
             sys.exit(0)
 
 def main():
-    world = Map(32)
+    world = Map()
 
-    SCREEN_SIZE = 768
-
-    SCALING_FACTOR = SCREEN_SIZE / world.get_size()
+    # to display on second monitor
+    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{-1400},{50}"
 
     pg.init()
+
+    SCREEN_SIZE = 896
     pg.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
     screen = pg.display.get_surface()
 
+    clock = pg.time.Clock()
+
+    scaling_factor = SCREEN_SIZE / world.get_size()
+
     for i in range(world.get_size()):
         for j in range(world.get_size()):
-            square = pg.Rect(j * SCALING_FACTOR, i * SCALING_FACTOR, SCALING_FACTOR, SCALING_FACTOR)
-            color = (81, 179, 54)
-            match world.grid[i][j]:
-                case 1:
-                    color = (33, 139, 219)
-                case 2:
-                    color = (41, 128, 17)
-            pg.draw.rect(screen, color, square)
-            
+            tile = pg.Rect(j * scaling_factor, i * scaling_factor, scaling_factor, scaling_factor)
+            tile_type = id_to_type[int(world.get_map()[i][j])]
+
+            if(tile_type == Water):
+                tiles.add(Water(tile))
+            elif(tile_type == Grass):
+                tiles.add(Grass(tile, rd.randint(5, 7), rd.uniform(0.5, 1)))
 
     while True:
+        screen.fill((81, 179, 54))
+
         input(pg.event.get())
 
+        for tile in tiles:
+            tile.update(screen)
+
         pg.display.update()
+
+        clock.tick(60)
 
 if __name__ == "__main__":
     main()
