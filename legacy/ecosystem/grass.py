@@ -39,8 +39,13 @@ class Grass(pg.sprite.Sprite):
 
         Grass.instances.add(self)
     
-    def can_reproduce(self, positive_dependents, negative_dependents):
+    def can_reproduce(self, tile_size, waters):
         pass
 
     def update(self, screen):
+        self.age += 0.005
+        if self.rect.height < self.MAX_HEIGHT:
+            self.height += 0.025
+                
+        self.rect.height = self.height
         pg.draw.rect(screen, self.COLOR, self.rect)

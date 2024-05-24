@@ -1,61 +1,54 @@
-import pygame as pg
-import random as rd
-import sys, os
+import pygame
+from random import uniform, randint
+import os, sys
 
-from map import Map
-
-from ecosystem.water import Water
-from ecosystem.grass import Grass
-
-types = [Water, Grass]
-id_to_type = {type.ID: type for type in types}
-id_to_type[0] = None
-
-tiles = pg.sprite.Group()
+from ecosystem import Map, Water, Grass, all_elements
 
 def input(events):
     for event in events:
-        if event.type == pg.QUIT:
-            pg.quit()
+        if event.type == pygame.QUIT:
+            pygame.quit()
             sys.exit(0)
 
 def main():
-    world = Map()
-
     # to display on second monitor
     os.environ['SDL_VIDEO_WINDOW_POS'] = f"{-1400},{50}"
 
-    pg.init()
+    pygame.init()
+    clock = pygame.time.Clock()
+    fps = 30
 
-    SCREEN_SIZE = 896
-    pg.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
-    screen = pg.display.get_surface()
+    tile_size = 28
+    world = Map(size = 32, tile_size = tile_size)
 
-    clock = pg.time.Clock()
+    screen_size = world.get_size() * tile_size
 
-    scaling_factor = SCREEN_SIZE / world.get_size()
+    pygame.display.set_mode((screen_size, screen_size))
+    screen = pygame.display.get_surface()
 
-    for i in range(world.get_size()):
-        for j in range(world.get_size()):
-            tile = pg.Rect(j * scaling_factor, i * scaling_factor, scaling_factor, scaling_factor)
-            tile_type = id_to_type[int(world.get_map()[i][j])]
-
-            if(tile_type == Water):
-                tiles.add(Water(tile))
-            elif(tile_type == Grass):
-                tiles.add(Grass(tile, rd.randint(5, 7), rd.uniform(0.5, 1)))
+    ground_image = pygame.transform.scale(pygame.image.load('images/ground.png'), (tile_size, tile_size))
+    
 
     while True:
-        screen.fill((81, 179, 54))
+        input(pygame.event.get())
 
-        input(pg.event.get())
+        for i in range(world.get_size()):
+            for j in range(world.get_size()):
+                element = world.map[i, j]
+                if element is None:
+                    screen.blit(ground_image, (j * tile_size, i * tile_size))
+                    continue
+                screen.blit(element.image.convert(), (element.rect.x, element.rect.y))
 
-        for tile in tiles:
-            tile.update(screen)
+        for grass in list(Grass.elements.values()):
+            child, death = grass.update(tile_size, world.get_size())
+            if child:
+                world.map[int(child.rect.y / tile_size), int(child.rect.x / tile_size)] = child
+            elif death:
+                world.map[int(grass.rect.y / tile_size), int(grass.rect.x / tile_size)] = None
 
-        pg.display.update()
-
-        clock.tick(60)
+        pygame.display.update()
+        clock.tick(fps)
 
 if __name__ == "__main__":
     main()

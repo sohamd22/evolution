@@ -16,9 +16,9 @@ class Map:
         self.grid = np.zeros((size, size))
 
         self.initialize_chunks(Water, 0.025, 4, 8)
-        self.initialize_chunks(Grass, 0.05, 1, 3)
+        self.initialize_chunks(Grass, 0.05, 1, 3, [(0, 1), (0, -1)])
     
-    def initialize_chunks(self, ChunkType, frequency, min_size = 1, max_size = 1):
+    def initialize_chunks(self, ChunkType, frequency, min_size = 1, max_size = 1, directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]):
         # initializes different chunk types on the map in the given frequency inclusive between the given sizes
 
         # randomly spreading chunk centers
@@ -27,8 +27,7 @@ class Map:
                 if(rd.random() < frequency and not self.grid[i][j]):
                     self.grid[i][j] = ChunkType.ID
         
-        # expanding the randomly spread water breadth first
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        # expanding the randomly spread chunks breadth first in the given possible directions
         visited = set()
 
         for i in range(self.get_size()):
@@ -53,7 +52,7 @@ class Map:
 
                         rd.shuffle(directions)
                         for di, dj in directions:
-                            if(min(ci + di, cj + dj) < 0 or max(ci + di, cj + dj) >= self.get_size() or (ci + di, cj + dj) in current_chunk):
+                            if(min(ci + di, cj + dj) < 0 or max(ci + di, cj + dj) >= self.get_size() or (ci + di, cj + dj) in current_chunk or self.grid[ci + di][cj + dj]):
                                 continue
                             queue.append((ci + di, cj + dj))
 
