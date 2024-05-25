@@ -1,5 +1,5 @@
 import numpy as np
-from random import random, shuffle, randint
+from random import random, shuffle, randint, choice
 import math
 import pygame
 
@@ -119,7 +119,7 @@ class Grass:
                     to_visit.append((vx, vy))
                     vx, vy = vx - dx, vy - dy
 
-        reproduction_chance = self.reproduction_factor / (water_importance * self.vicinity_to_water * surrounding_grass_factor)
+        return self.reproduction_factor / (water_importance * self.vicinity_to_water * surrounding_grass_factor)
 
     def update(self, tile_size, map_size):
         self.age += 0.1
@@ -161,7 +161,7 @@ class Rabbit:
 
         self.sex = sex
 
-        self.speed = speed or randint(10, 20) / 10
+        self.speed = speed or randint(10, 20) / 100
 
         self.hunger = Rabbit.hunger_factor * speed
         self.thirst = Rabbit.thirst_factor * speed
@@ -176,7 +176,34 @@ class Rabbit:
         self.rect = self.image.get_rect(x = x, y = y)
 
         self.instances.append(self)
-        all_instances[(self.rect.x, self.rect.y)] = self
+    
+    def update(self, tile_size, map_size):
+        self.age += 0.1
+
+        self.hunger -= 0.1
+        self.thirst -= 0.1
+
+        if min(self.hunger, self.thirst) < 0:
+            Rabbit.instances.remove(self)
+            del self
+            return
+
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, -1), (-1, 1)]
+        
+        while True:
+            dx, dy = choice(directions)
+
+            new_x = self.rect.x + (dx * tile_size)
+            new_y = self.rect.y + (dy * tile_size)
+
+            if min(new_x, new_y) < 0 or max(new_x, new_y) >= map_size:
+                continue
+            
+            self.rect.x += (dx * tile_size)
+            self.rect.y += (dy * tile_size)
+            break
+
+
 
 class Map:
     def __init__(self, size = 64, tile_size = 8):
