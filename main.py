@@ -16,15 +16,18 @@ def main():
 
     pygame.init()
     clock = pygame.time.Clock()
-    fps = 30
+    fps = 1 # each frame represents 1/10th of a year
 
-    tile_size = 28
-    world = Map(size = 32, tile_size = tile_size)
+    tile_size = 60
+    world = Map(size = 16, tile_size = tile_size)
 
     screen_size = world.get_size() * tile_size
 
     pygame.display.set_mode((screen_size, screen_size))
+    pygame.display.set_caption('Evolution')
     screen = pygame.display.get_surface()
+
+    font = pygame.font.Font('freesansbold.ttf', tile_size // 2)
 
     ground_image = pygame.transform.scale(pygame.image.load('images/ground.png'), (tile_size, tile_size))
     
@@ -39,6 +42,12 @@ def main():
                     screen.blit(ground_image, (j * tile_size, i * tile_size))
                     continue
                 screen.blit(element.image.convert(), (element.rect.x, element.rect.y))
+                if isinstance(element, Grass):
+                    text = font.render(str(element.lifespan), True, (255, 255, 255))
+                    text.set_alpha(200)
+                    text_rect = text.get_rect(center = (element.rect.x + tile_size // 2, element.rect.y + tile_size // 2))
+                    
+                    screen.blit(text, text_rect)
 
         for grass in list(Grass.elements.values()):
             child, death = grass.update(tile_size, world.get_size())

@@ -27,6 +27,8 @@ class Water:
         return "W"
 
 class Grass:
+    max_reproduction_factor = 0.8
+
     mutation_chance = 0.01
 
     chance = 0.1
@@ -34,9 +36,11 @@ class Grass:
     images = ['images/grass-young.png', 'images/grass.png', 'images/grass-old.png', 'images/grass-dying.png']
     elements = {}
 
-    def __init__(self, tile_size, position, lifespan = randint(5, 7)):
-        self.lifespan = lifespan
+    def __init__(self, tile_size, position, lifespan = None):
+        self.lifespan = lifespan or randint(50, 70) / 10
         self.age = 0
+
+        self.reproduction_factor = Grass.max_reproduction_factor
 
         x, y = position[0] * tile_size, position[1] * tile_size
 
@@ -69,12 +73,28 @@ class Grass:
     def reproduce(self, tile_size, map_size):
         if(self.age < 0.2 * self.lifespan or self.age >= 0.8 * self.lifespan):
             return
+
+        reproduction_chance = self.get_reproduction_chance(tile_size, map_size)
         
-        alpha = 0.1
+        if random() < reproduction_chance:
+            directions = [(0, tile_size), (tile_size, 0), (0, -tile_size), (-tile_size, 0), (tile_size, tile_size), (tile_size, -tile_size), (-tile_size, -tile_size), (-tile_size, tile_size)]
+
+            shuffle(directions)
+            possibilities = [(self.rect.x + dx, self.rect.y + dy) for dx, dy in directions]
+
+            for px, py in possibilities:
+                if min(px, py) < 0 or max(px, py) >= (map_size * tile_size) or (px, py) in all_elements:
+                    continue
+                lifespan_mutation = (randint(-5, 5) / 10) if random() < Grass.mutation_chance else 0
+                child = Grass(tile_size, (px / tile_size, py / tile_size), round(self.lifespan + lifespan_mutation, 1))
+                self.reproduction_factor = 0
+                return child
+
+    def get_reproduction_chance(self, tile_size, map_size):
         water_importance = 3
 
         surrounding_grass_factor = 1
-        affected_range = 3
+        affected_range = 2
 
         directions = [(0, tile_size), (tile_size, 0), (0, -tile_size), (-tile_size, 0)]
         visited = set([(self.rect.x, self.rect.y)])
@@ -99,21 +119,13 @@ class Grass:
                     to_visit.append((vx, vy))
                     vx, vy = vx - dx, vy - dy
 
-        reproduction_chance = alpha / (water_importance * self.vicinity_to_water * surrounding_grass_factor)
-        
-        if random() < reproduction_chance:
-            shuffle(directions)
-            possibilities = [(self.rect.x + dx, self.rect.y + dy) for dx, dy in directions]
-
-            for px, py in possibilities:
-                if min(px, py) < 0 or max(px, py) >= (map_size * tile_size) or (px, py) in all_elements:
-                    continue
-                lifespan_mutation = (randint(-5, 5) / 10) if random() < Grass.mutation_chance else 0
-                child = Grass(tile_size, (px / tile_size, py / tile_size), self.lifespan + lifespan_mutation)
-                return child
+        reproduction_chance = self.reproduction_factor / (water_importance * self.vicinity_to_water * surrounding_grass_factor)
 
     def update(self, tile_size, map_size):
-        self.age += 0.01
+        self.age += 0.1
+
+        if self.reproduction_factor < Grass.max_reproduction_factor:
+            self.reproduction_factor += Grass.max_reproduction_factor / 4
 
         if self.age >= self.lifespan:
             Grass.elements.pop((self.rect.x, self.rect.y))
@@ -133,6 +145,10 @@ class Grass:
 
     def __str__(self):
         return "G"
+
+class Rabbit:
+    def __init__(self, position, lifespan, speed):
+        pass
 
 class Map:
     def __init__(self, size = 64, tile_size = 8):
