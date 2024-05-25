@@ -2,7 +2,7 @@ import pygame
 from random import uniform, randint
 import os, sys
 
-from ecosystem import Map, Water, Grass, all_elements
+from ecosystem import Map, Water, Grass, all_instances
 
 def input(events):
     for event in events:
@@ -37,19 +37,19 @@ def main():
 
         for i in range(world.get_size()):
             for j in range(world.get_size()):
-                element = world.map[i, j]
-                if element is None:
+                instance = world.map[i, j]
+                if instance is None:
                     screen.blit(ground_image, (j * tile_size, i * tile_size))
                     continue
-                screen.blit(element.image.convert(), (element.rect.x, element.rect.y))
-                if isinstance(element, Grass):
-                    text = font.render(str(element.lifespan), True, (255, 255, 255))
+                screen.blit(instance.image.convert(), (instance.rect.x, instance.rect.y))
+                if isinstance(instance, Grass):
+                    text = font.render(str(instance.lifespan), True, (255, 255, 255))
                     text.set_alpha(200)
-                    text_rect = text.get_rect(center = (element.rect.x + tile_size // 2, element.rect.y + tile_size // 2))
+                    text_rect = text.get_rect(center = (instance.rect.x + tile_size // 2, instance.rect.y + tile_size // 2))
                     
                     screen.blit(text, text_rect)
 
-        for grass in list(Grass.elements.values()):
+        for grass in list(Grass.instances.values()):
             child, death = grass.update(tile_size, world.get_size())
             if child:
                 world.map[int(child.rect.y / tile_size), int(child.rect.x / tile_size)] = child

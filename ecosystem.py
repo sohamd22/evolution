@@ -5,7 +5,7 @@ import pygame
 
 from collections import deque
 
-all_elements = {}
+all_instances = {}
 
 class Water:
     chance = 0.05
@@ -14,14 +14,14 @@ class Water:
     max_cluster_size = 8
 
     images = ['images/water.png']
-    elements = {}
+    instances = {}
 
     def __init__(self, tile_size, position):
         self.image = pygame.transform.scale(pygame.image.load(self.images[0]), (tile_size, tile_size))
         self.rect = self.image.get_rect(x = position[0] * tile_size, y = position[1] * tile_size)
 
-        self.elements[(self.rect.x, self.rect.y)] = self
-        all_elements[(self.rect.x, self.rect.y)] = self
+        self.instances[(self.rect.x, self.rect.y)] = self
+        all_instances[(self.rect.x, self.rect.y)] = self
     
     def __str__(self):
         return "W"
@@ -34,7 +34,7 @@ class Grass:
     chance = 0.1
 
     images = ['images/grass-young.png', 'images/grass.png', 'images/grass-old.png', 'images/grass-dying.png']
-    elements = {}
+    instances = {}
 
     def __init__(self, tile_size, position, lifespan = None):
         self.lifespan = lifespan or randint(50, 70) / 10
@@ -52,7 +52,7 @@ class Grass:
             vx, vy = to_visit.popleft()
             visited.add((vx, vy))
 
-            if (vx, vy) in Water.elements:
+            if (vx, vy) in Water.instances:
                 self.vicinity_to_water = math.dist((x, y), (vx, vy)) / tile_size
                 break
             
@@ -67,8 +67,8 @@ class Grass:
         self.image = pygame.transform.scale(pygame.image.load(self.images[0]), (tile_size, tile_size))
         self.rect = self.image.get_rect(x = x, y = y)
 
-        self.elements[(self.rect.x, self.rect.y)] = self
-        all_elements[(self.rect.x, self.rect.y)] = self
+        self.instances[(self.rect.x, self.rect.y)] = self
+        all_instances[(self.rect.x, self.rect.y)] = self
     
     def reproduce(self, tile_size, map_size):
         if(self.age < 0.2 * self.lifespan or self.age >= 0.8 * self.lifespan):
@@ -83,7 +83,7 @@ class Grass:
             possibilities = [(self.rect.x + dx, self.rect.y + dy) for dx, dy in directions]
 
             for px, py in possibilities:
-                if min(px, py) < 0 or max(px, py) >= (map_size * tile_size) or (px, py) in all_elements:
+                if min(px, py) < 0 or max(px, py) >= (map_size * tile_size) or (px, py) in all_instances:
                     continue
                 lifespan_mutation = (randint(-5, 5) / 10) if random() < Grass.mutation_chance else 0
                 child = Grass(tile_size, (px / tile_size, py / tile_size), round(self.lifespan + lifespan_mutation, 1))
@@ -108,7 +108,7 @@ class Grass:
                 vx, vy = to_visit.popleft()
                 visited.add((vx, vy))
 
-                if (vx, vy) in Grass.elements:
+                if (vx, vy) in Grass.instances:
                     surrounding_grass_factor += (affected_range - i)
                 
                 for dx, dy in directions:
@@ -128,8 +128,8 @@ class Grass:
             self.reproduction_factor += Grass.max_reproduction_factor / 4
 
         if self.age >= self.lifespan:
-            Grass.elements.pop((self.rect.x, self.rect.y))
-            all_elements.pop((self.rect.x, self.rect.y))
+            Grass.instances.pop((self.rect.x, self.rect.y))
+            all_instances.pop((self.rect.x, self.rect.y))
             del self
             return (None, True)
         if self.age >= 0.8 * self.lifespan:
@@ -147,8 +147,36 @@ class Grass:
         return "G"
 
 class Rabbit:
-    def __init__(self, position, lifespan, speed):
-        pass
+    images = ['images/rabbit-male.png', 'images/rabbit-female.png']
+    instances = []
+
+    hunger_factor = 5
+    thirst_factor = 3
+
+    gestation_factor = 0.05
+
+    def __init__(self, size, position, sex, lifespan, speed):
+        self.lifespan = lifespan or randint(60, 80) / 10
+        self.age = 0
+
+        self.sex = sex
+
+        self.speed = speed or randint(10, 20) / 10
+
+        self.hunger = Rabbit.hunger_factor * speed
+        self.thirst = Rabbit.thirst_factor * speed
+
+        if sex == 1:
+            # female
+            self.gestation_period = Rabbit.gestation_factor * self.lifespan
+
+        x, y = position[0], position[1]
+
+        self.image = pygame.transform.scale(pygame.image.load(self.images[sex]), (size, size))
+        self.rect = self.image.get_rect(x = x, y = y)
+
+        self.instances.append(self)
+        all_instances[(self.rect.x, self.rect.y)] = self
 
 class Map:
     def __init__(self, size = 64, tile_size = 8):
