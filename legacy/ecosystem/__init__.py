@@ -1,1 +1,0 @@
-__all__ = ["water", "grass", "rabbit", "fox"]
